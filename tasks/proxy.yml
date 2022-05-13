@@ -1,0 +1,60 @@
+- name: Download certificate
+  get_url:
+    url: "{{ tls_cert }}"
+    dest: "{{ registry_app_path }}/proxy/common.crt"
+    owner: "{{username}}"
+    group: "{{ username }}"
+
+- name: Download certificate key
+  get_url:
+    url: "{{ tls_key }}"
+    dest: "{{ registry_app_path }}/proxy/common.key"
+    owner: "{{username}}"
+    group: "{{ username }}"
+
+- name: Remove htpasswd files
+  ansible.builtin.file:
+    path: "{{ registry_app_path }}/proxy/{{item.name}}.htpasswd"
+    state: absent
+  loop: "{{ registry_instances }}"
+  loop_control:
+    label: "{{ registry_app_path }}/proxy/{{item.name}}.htpasswd"
+
+- name: Add a user to a password file
+  community.general.htpasswd:
+    path: "{{ registry_app_path }}/proxy/{{item.0.name}}.htpasswd"
+    name: "{{ item.1.name }}"
+    password: "{{ item.1.password }}"
+    owner: "{{ username }}"
+    group: "{{ username }}"
+    mode: 0644
+  with_subelements:
+     - "{{ registry_instances }}"
+     - users
+  loop_control:
+    label: "{{ registry_app_path }}/proxy/{{item.0.name}}.htpasswd"
+
+- name: Create proxy config
+  ansible.builtin.template:
+    src: templates/nginx.conf.j2
+    dest: "{{ registry_app_path }}/proxy/nginx.conf"
+    owner: "{{username}}"
+    group: "{{ username }}"
+
+- name: Run proxy
+  docker_container:
+    name: "proxy"
+    image: "{{ proxy_image }}:{{ proxy_tag }}"
+    restart_policy: always
+    restart: yes
+    volumes:
+      - "{{ registry_app_path }}/proxy/nginx.conf:/etc/nginx/nginx.conf:ro"
+      - "{{ registry_app_path }}/proxy:/nginx:ro"
+    exposed_ports:
+      - "443"
+    ports:
+      - "443:443"
+    networks:
+      - name: "{{ registry_internal_network }}"
+        aliases:
+          - "proxy"

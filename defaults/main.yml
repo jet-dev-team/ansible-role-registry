@@ -1,0 +1,15 @@
+proxy_image: 'nginx'
+proxy_tag: '1.21.6-alpine'
+registry_image: 'registry'
+registry_tag: '2.8.1'
+
+registry_instances: []
+registry_internal_network: 'registry-net'
+registry_app_path: '/opt/app_registry'
+
+username: 'registry'
+
+tls_cert: ""
+tls_key: ""
+
+max_image_size: "300M"
