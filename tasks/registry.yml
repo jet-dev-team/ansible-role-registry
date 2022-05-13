@@ -1,0 +1,16 @@
+- name: Run registries
+  docker_container:
+    name: "{{ item.name }}"
+    image: "{{ registry_image }}:{{ registry_tag }}"
+    restart_policy: always
+    restart: yes
+    purge_networks: yes
+    volumes:
+      - "{{ registry_app_path }}/{{ item.name }}:/var/lib/registry:rw"
+    networks:
+      - name: "{{ registry_internal_network }}"
+        aliases:
+          - "{{ item.name }}"
+  loop: "{{ registry_instances }}"
+  loop_control:
+    label: "{{ item.name }}"

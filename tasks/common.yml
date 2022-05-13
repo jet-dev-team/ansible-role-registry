@@ -1,0 +1,40 @@
+- name: Install pip3
+  apt:
+    name: python3-pip
+
+- name: Install required python libraries
+  pip:
+    name:
+      - docker
+      - passlib
+
+- name: Add user
+  ansible.builtin.user:
+    name: "{{ username }}"
+    shell: /bin/bash
+    groups: sudo,docker
+    append: yes
+
+- name: Create persistent storage
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ username }}"
+    group: "{{ username }}"
+  loop:
+    - "{{ registry_app_path }}"
+    - "{{ registry_app_path }}/proxy"
+
+- name: Create storage for registries
+  ansible.builtin.file:
+    path: "{{ registry_app_path }}/{{ item.name }}"
+    state: directory
+    owner: "{{ username }}"
+    group: "{{ username }}"
+  loop: "{{ registry_instances }}"
+  loop_control:
+    label: "{{ registry_app_path }}/{{ item.name }}"
+
+- name: Create a network
+  docker_network:
+    name: "{{ registry_internal_network }}"
