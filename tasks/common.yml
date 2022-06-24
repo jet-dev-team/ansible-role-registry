@@ -9,14 +9,14 @@
       - passlib
 
 - name: Add user
-  ansible.builtin.user:
+  user:
     name: "{{ username }}"
     shell: /bin/bash
     groups: sudo,docker
     append: yes
 
 - name: Create persistent storage
-  ansible.builtin.file:
+  file:
     path: "{{ item }}"
     state: directory
     owner: "{{ username }}"
@@ -26,7 +26,7 @@
     - "{{ registry_app_path }}/proxy"
 
 - name: Create storage for registries
-  ansible.builtin.file:
+  file:
     path: "{{ registry_app_path }}/{{ item.name }}"
     state: directory
     owner: "{{ username }}"

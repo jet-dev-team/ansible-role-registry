@@ -13,7 +13,7 @@
     group: "{{ username }}"
 
 - name: Remove htpasswd files
-  ansible.builtin.file:
+  file:
     path: "{{ registry_app_path }}/proxy/{{item.name}}.htpasswd"
     state: absent
   loop: "{{ registry_instances }}"
@@ -21,7 +21,7 @@
     label: "{{ registry_app_path }}/proxy/{{item.name}}.htpasswd"
 
 - name: Add a user to a password file
-  community.general.htpasswd:
+  htpasswd:
     path: "{{ registry_app_path }}/proxy/{{item.0.name}}.htpasswd"
     name: "{{ item.1.name }}"
     password: "{{ item.1.password }}"
@@ -35,7 +35,7 @@
     label: "{{ registry_app_path }}/proxy/{{item.0.name}}.htpasswd"
 
 - name: Create proxy config
-  ansible.builtin.template:
+  template:
     src: templates/nginx.conf.j2
     dest: "{{ registry_app_path }}/proxy/nginx.conf"
     owner: "{{username}}"
